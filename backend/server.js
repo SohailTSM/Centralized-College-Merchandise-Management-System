@@ -1,0 +1,19 @@
+require('dotenv').config();
+const express = require('express');
+const cors    = require('cors');
+
+const connectDB = require('./src/config/db');
+
+const app = express();
+
+connectDB();
+
+app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }));
+app.use(express.json());
+
+app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`CCMMS server running on http://localhost:${PORT}`));
+
+module.exports = { app };
