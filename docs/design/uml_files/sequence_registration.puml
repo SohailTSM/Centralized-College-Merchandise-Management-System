@@ -1,0 +1,20 @@
+@startuml
+actor Student
+    participant "React Frontend" as React
+    participant AuthController
+    participant UserProfileBuilder
+    participant UserRepository
+    participant MongoDB
+
+    Student->React: Fill registration form (name, email, password, sizes)
+    React->AuthController: POST /api/auth/register {name, email, password, role:"student"}
+    AuthController->UserProfileBuilder: setName().setEmail().setSizeProfile().build()
+    UserProfileBuilder-->AuthController: UserProfile object
+    AuthController->UserRepository: create(userProfile)
+    UserRepository->MongoDB: insertOne(users)
+    MongoDB-->UserRepository: {_id, ...}
+    UserRepository-->AuthController: User document
+    AuthController-->React: 201 Created + JWT token
+    React-->Student: Redirect to catalog (logged in)
+
+@enduml

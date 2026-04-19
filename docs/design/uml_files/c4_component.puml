@@ -1,0 +1,69 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+    Container_Ext(reactSPA, "React SPA", "React.js")
+    ContainerDb_Ext(mongoDB, "MongoDB", "Database")
+
+    Container_Boundary(api, "Express REST API") {
+
+        Component(authRouter, "Auth Router & Controller", "Express Router", "Handles /api/auth/* routes: register, login, token refresh. Issues JWTs.")
+        Component(authMiddleware, "Auth Middleware", "Express Middleware", "Verifies JWT on every protected route. Attaches decoded user to req.user.")
+        Component(rbacMiddleware, "RBAC Middleware", "Express Middleware", "Enforces role-based access: student vs club_admin. Returns 403 if unauthorized.")
+
+        Component(userRouter, "User Router & Controller", "Express Router", "Handles /api/users/* routes: get/update size profile.")
+        Component(merchandiseRouter, "Merchandise Router & Controller", "Express Router", "Handles /api/merchandise/* routes: CRUD for listings.")
+        Component(orderRouter, "Order Router & Controller", "Express Router", "Handles /api/orders/* routes: place, update status.")
+        Component(deliveryRouter, "Delivery Router & Controller", "Express Router", "Handles /api/delivery-slots/* routes: create slots, subscribe.")
+        Component(notificationRouter, "Notification Router & Controller", "Express Router", "Handles /api/notifications/* routes: list, mark read.")
+
+        Component(merchandiseFactory, "MerchandiseFactory", "Factory Pattern", "Creates typed merchandise product objects (Tshirt, Hoodie, Cap, Mug).")
+        Component(profileBuilder, "UserProfileBuilder", "Builder Pattern", "Constructs UserProfile step-by-step with validation.")
+        Component(commandInvoker, "CommandInvoker", "Command Pattern", "Executes PlaceOrderCommand, UpdateOrderStatusCommand.")
+        Component(orderEventEmitter, "OrderEventEmitter", "Observer Pattern", "Emits order lifecycle events to registered observers.")
+        Component(eventBus, "EventBus", "Pub-Sub Pattern", "Routes delivery slot events to NotificationSubscriber.")
+
+        Component(userRepo, "UserRepository", "Repository Pattern", "Abstracts all User DB operations.")
+        Component(merchandiseRepo, "MerchandiseRepository", "Repository Pattern", "Abstracts all Merchandise DB operations.")
+        Component(orderRepo, "OrderRepository", "Repository Pattern", "Abstracts all Order DB operations.")
+        Component(deliveryRepo, "DeliverySlotRepository", "Repository Pattern", "Abstracts all DeliverySlot DB operations.")
+        Component(notificationRepo, "NotificationRepository", "Repository Pattern", "Abstracts all Notification DB operations.")
+    }
+
+    Rel(reactSPA, authRouter, "POST /api/auth/*", "REST/JSON")
+    Rel(reactSPA, userRouter, "GET/PUT /api/users/*", "REST/JSON")
+    Rel(reactSPA, merchandiseRouter, "GET/POST/PUT/DELETE /api/merchandise/*", "REST/JSON")
+    Rel(reactSPA, orderRouter, "GET/POST/PATCH/DELETE /api/orders/*", "REST/JSON")
+    Rel(reactSPA, deliveryRouter, "GET/POST /api/delivery-slots/*", "REST/JSON")
+    Rel(reactSPA, notificationRouter, "GET/PATCH /api/notifications/*", "REST/JSON")
+
+    Rel(authRouter, authMiddleware, "Uses")
+    Rel(userRouter, authMiddleware, "Protected by")
+    Rel(userRouter, rbacMiddleware, "RBAC enforced by")
+    Rel(merchandiseRouter, authMiddleware, "Protected by")
+    Rel(merchandiseRouter, rbacMiddleware, "RBAC enforced by")
+    Rel(orderRouter, authMiddleware, "Protected by")
+    Rel(deliveryRouter, authMiddleware, "Protected by")
+    Rel(notificationRouter, authMiddleware, "Protected by")
+
+    Rel(merchandiseRouter, merchandiseFactory, "Uses for type creation")
+    Rel(userRouter, profileBuilder, "Uses for profile construction")
+    Rel(orderRouter, commandInvoker, "Delegates to")
+    Rel(commandInvoker, orderEventEmitter, "Triggers after command")
+    Rel(orderEventEmitter, notificationRepo, "Observer: creates notifications")
+    Rel(deliveryRouter, eventBus, "Publishes slot events to")
+    Rel(eventBus, notificationRepo, "Subscriber: persists notifications")
+
+    Rel(authRouter, userRepo, "Reads/writes users")
+    Rel(userRouter, userRepo, "Reads/writes users")
+    Rel(merchandiseRouter, merchandiseRepo, "Reads/writes merchandise")
+    Rel(orderRouter, orderRepo, "Reads/writes orders")
+    Rel(deliveryRouter, deliveryRepo, "Reads/writes delivery slots")
+    Rel(notificationRouter, notificationRepo, "Reads notifications")
+
+    Rel(userRepo, mongoDB, "Mongoose ODM")
+    Rel(merchandiseRepo, mongoDB, "Mongoose ODM")
+    Rel(orderRepo, mongoDB, "Mongoose ODM")
+    Rel(deliveryRepo, mongoDB, "Mongoose ODM")
+    Rel(notificationRepo, mongoDB, "Mongoose ODM")
+
+@enduml

@@ -1,0 +1,45 @@
+@startuml
+class MerchandiseFactory {
+        +create(type: String, data: Object) MerchandiseProduct
+    }
+
+    interface MerchandiseProduct {
+        +String type
+        +String name
+        +Number price
+        +String[] availableSizes
+        +validate() Boolean
+        +toDocument() Object
+    }
+
+    class TshirtProduct {
+        +String type = "tshirt"
+        +validate() Boolean
+        +toDocument() Object
+    }
+
+    class HoodieProduct {
+        +String type = "hoodie"
+        +validate() Boolean
+        +toDocument() Object
+    }
+
+    class CapProduct {
+        +String type = "cap"
+        +validate() Boolean
+        +toDocument() Object
+    }
+
+    class MugProduct {
+        +String type = "mug"
+        +validate() Boolean
+        +toDocument() Object
+    }
+
+    MerchandiseFactory --> MerchandiseProduct : creates
+    MerchandiseProduct <|.. TshirtProduct : implements
+    MerchandiseProduct <|.. HoodieProduct : implements
+    MerchandiseProduct <|.. CapProduct : implements
+    MerchandiseProduct <|.. MugProduct : implements
+
+@enduml

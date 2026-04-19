@@ -1,0 +1,17 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+    Person(student, "Student", "A college student who browses merchandise, places orders, and receives delivery notifications.")
+    Person(clubAdmin, "Club Manager", "A club administrator who publishes merchandise listings and manages student orders.")
+
+    System(ccmms, "CCMMS", "Centralized College Merchandise Management System. Web portal for unified merchandise listing, ordering, and delivery notifications.")
+
+    System_Ext(browser, "Web Browser", "Students and club admins access the system via a standard web browser.")
+
+    Rel(student, ccmms, "Browses catalog, places orders, receives notifications", "HTTPS")
+    Rel(clubAdmin, ccmms, "Publishes merchandise, manages orders, creates delivery slots", "HTTPS")
+    Rel(student, browser, "Uses")
+    Rel(clubAdmin, browser, "Uses")
+    Rel(browser, ccmms, "Renders UI from", "HTTPS")
+
+@enduml

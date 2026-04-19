@@ -1,0 +1,20 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+    Person(student, "Student", "College student")
+    Person(clubAdmin, "Club Manager", "Club administrator")
+
+    System_Boundary(ccmms, "CCMMS") {
+        Container(reactSPA, "React SPA", "React.js, Vite", "Single-page web application. Serves student and admin UI. Communicates with backend via REST and WebSocket.")
+
+        Container(expressAPI, "Express REST API", "Node.js, Express.js", "Handles all business logic. Exposes REST endpoints for auth, merchandise, orders, delivery slots, and notifications. Enforces JWT auth and RBAC.")
+
+        ContainerDb(mongoDB, "MongoDB", "MongoDB 7.x", "Stores all application data: users, clubs, merchandise, orders, delivery slots, and notifications.")
+    }
+
+    Rel(student, reactSPA, "Uses", "HTTPS")
+    Rel(clubAdmin, reactSPA, "Uses", "HTTPS")
+    Rel(reactSPA, expressAPI, "Makes API calls", "REST / JSON over HTTPS")
+    Rel(expressAPI, mongoDB, "Reads/writes", "Mongoose ODM")
+
+@enduml

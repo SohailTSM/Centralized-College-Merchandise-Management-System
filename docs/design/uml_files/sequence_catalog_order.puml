@@ -1,0 +1,42 @@
+@startuml
+actor Student
+    participant "React Frontend" as React
+    participant MerchandiseController
+    participant MerchandiseRepository
+    participant OrderController
+    participant PlaceOrderCommand
+    participant OrderRepository
+    participant OrderEventEmitter
+    participant NotificationObserver
+    participant NotificationRepository
+    participant MongoDB
+
+    Student->React: Navigate to Catalog page
+    React->MerchandiseController: GET /api/merchandise?page=1
+    MerchandiseController->MerchandiseRepository: findAll({isActive:true})
+    MerchandiseRepository->MongoDB: find(merchandise)
+    MongoDB-->MerchandiseRepository: [items]
+    MerchandiseRepository-->MerchandiseController: Merchandise[]
+    MerchandiseController-->React: 200 OK + paginated items
+
+    Student->React: Select item (size auto-filled from saved profile)
+    React->React: Read sizeProfile from auth context
+    Student->React: Click proceed to Payment
+    React->React: Render Payment Page
+    Student->React: Complete simulated payment
+    note over React: 1.5s simulated processing delay
+    React->OrderController: POST /api/orders {items, totalAmount}
+    OrderController->PlaceOrderCommand: new PlaceOrderCommand(orderData)
+    PlaceOrderCommand->OrderRepository: create(orderData)
+    OrderRepository->MongoDB: insertOne(orders)
+    MongoDB-->OrderRepository: Order document
+    OrderRepository-->PlaceOrderCommand: Order
+    PlaceOrderCommand->OrderEventEmitter: emitOrderPlaced(order)
+    OrderEventEmitter->NotificationObserver: handleOrderPlaced(order)
+    NotificationObserver->NotificationRepository: create({userId, type:"order_placed", message})
+    NotificationRepository->MongoDB: insertOne(notifications)
+    PlaceOrderCommand-->OrderController: success
+    OrderController-->React: 201 Created + order details
+    React-->Student: Order confirmation screen
+
+@enduml

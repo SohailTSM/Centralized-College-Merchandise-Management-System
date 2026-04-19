@@ -1,0 +1,38 @@
+@startuml
+actor Student
+    participant "React Frontend" as React
+    participant AuthMiddleware
+    participant RBACMiddleware
+    participant MerchandiseController
+
+    note over Student,MerchandiseController:  Scenario A: Student attempts club-admin-only action
+
+    Student->React: Attempt to POST a new merchandise listing
+    React->AuthMiddleware: POST /api/merchandise (with student JWT)
+    AuthMiddleware->AuthMiddleware: Verify JWT signature → valid
+    AuthMiddleware->AuthMiddleware: Decode token → role = "student"
+    AuthMiddleware->RBACMiddleware: Pass to RBAC check
+    RBACMiddleware->RBACMiddleware: Required role = "club_admin", actual = "student"
+    RBACMiddleware-->React: 403 Forbidden {"message": "Access denied"}
+    React-->Student: Error: You do not have permission
+
+    note over Student,MerchandiseController:  Scenario B: Unauthenticated request
+
+    Student->React: GET /api/orders/my (no token)
+    React->AuthMiddleware: GET /api/orders/my (no Authorization header)
+    AuthMiddleware->AuthMiddleware: No token found
+    AuthMiddleware-->React: 401 Unauthorized {"message": "No token provided"}
+    React-->Student: Redirect to login page
+
+    note over Student,MerchandiseController:  Scenario C: Club admin accesses own resource
+
+    actor ClubAdmin
+    ClubAdmin->React: POST /api/merchandise (with club_admin JWT)
+    React->AuthMiddleware: POST /api/merchandise (valid club_admin token)
+    AuthMiddleware->AuthMiddleware: Verify + decode → role = "club_admin"
+    AuthMiddleware->RBACMiddleware: Pass to RBAC check
+    RBACMiddleware->RBACMiddleware: Required role = "club_admin" ✓
+    RBACMiddleware->MerchandiseController: Next()
+    MerchandiseController-->React: 201 Created
+
+@enduml

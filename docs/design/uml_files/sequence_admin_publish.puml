@@ -1,0 +1,32 @@
+@startuml
+actor ClubAdmin
+    participant "React Frontend" as React
+    participant AuthMiddleware
+    participant MerchandiseController
+    participant MerchandiseFactory
+    participant MerchandiseRepository
+    participant MongoDB
+
+    ClubAdmin->React: Login as club admin
+    React->AuthMiddleware: POST /api/auth/login {email, password, role:"club_admin"}
+    AuthMiddleware-->React: JWT token (role=club_admin)
+
+    ClubAdmin->React: Fill new listing form (type, name, price, sizes)
+    React->MerchandiseController: POST /api/merchandise {type, name, price, ...}
+    note over MerchandiseController:  AuthMiddleware verifies JWT + role=club_admin
+    MerchandiseController->MerchandiseFactory: create(type, data)
+    alt type = "tshirt"
+        MerchandiseFactory-->MerchandiseController: TshirtProduct
+    else type = "hoodie"
+        MerchandiseFactory-->MerchandiseController: HoodieProduct
+    else type = "cap"
+        MerchandiseFactory-->MerchandiseController: CapProduct
+    end
+    MerchandiseController->MerchandiseRepository: create(product.toDocument())
+    MerchandiseRepository->MongoDB: insertOne(merchandise)
+    MongoDB-->MerchandiseRepository: Merchandise document
+    MerchandiseRepository-->MerchandiseController: Merchandise
+    MerchandiseController-->React: 201 Created + listing details
+    React-->ClubAdmin: Listing live in catalog
+
+@enduml

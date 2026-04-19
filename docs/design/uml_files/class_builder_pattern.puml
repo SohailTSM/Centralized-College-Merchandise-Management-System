@@ -1,0 +1,27 @@
+@startuml
+class UserProfileBuilder {
+        -String name
+        -String email
+        -String contactNumber
+        -SizeProfile sizeProfile
+        -String address
+        +setName(name) UserProfileBuilder
+        +setEmail(email) UserProfileBuilder
+        +setContact(contact) UserProfileBuilder
+        +setSizeProfile(sizes) UserProfileBuilder
+        +setAddress(address) UserProfileBuilder
+        +build() UserProfile
+        +validate() Boolean
+    }
+
+    class UserProfile {
+        +String name
+        +String email
+        +String contactNumber
+        +SizeProfile sizeProfile
+        +String address
+    }
+
+    UserProfileBuilder --> UserProfile : builds
+
+@enduml

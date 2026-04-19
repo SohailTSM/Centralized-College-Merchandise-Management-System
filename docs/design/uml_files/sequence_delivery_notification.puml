@@ -1,0 +1,30 @@
+@startuml
+actor ClubAdmin
+    actor Student
+    participant "React Frontend" as React
+    participant DeliveryController
+    participant DeliverySlotRepository
+    participant DeliverySlotPublisher
+    participant EventBus
+    participant NotificationSubscriber
+    participant NotificationRepository
+    participant MongoDB
+
+    ClubAdmin->React: Create delivery slot (date, location, description)
+    React->DeliveryController: POST /api/delivery-slots {scheduledAt, location, description}
+    DeliveryController->DeliverySlotRepository: create(slotData)
+    DeliverySlotRepository->MongoDB: insertOne(deliverySlots)
+    MongoDB-->DeliverySlotRepository: DeliverySlot document
+    DeliverySlotRepository-->DeliveryController: DeliverySlot
+
+    DeliveryController->DeliverySlotPublisher: publishSlotCreated(slot)
+    DeliverySlotPublisher->EventBus: publish("slot:created", slot)
+
+    EventBus->NotificationSubscriber: onSlotCreated(slot)
+    NotificationSubscriber->NotificationRepository: create({userId: each subscriber, type:"delivery_update"})
+    NotificationRepository->MongoDB: insertMany(notifications)
+
+    DeliveryController-->React: 201 Created
+    React-->ClubAdmin: Slot created, students notified
+
+@enduml

@@ -1,0 +1,98 @@
+@startuml
+class User {
+        +ObjectId _id
+        +String name
+        +String email
+        +String passwordHash
+        +String role
+        +ObjectId clubId
+        +SizeProfile sizeProfile
+        +Date createdAt
+        +register() void
+        +login() String
+        +updateSizeProfile(profile) void
+    }
+
+    class SizeProfile {
+        +String tshirt
+        +String hoodie
+        +String other
+    }
+
+    class Club {
+        +ObjectId _id
+        +String name
+        +String description
+        +ObjectId adminId
+        +String logoUrl
+        +Date createdAt
+        +addMerchandise(item) void
+        +getOrders() Order[]
+    }
+
+    class Merchandise {
+        +ObjectId _id
+        +ObjectId clubId
+        +String type
+        +String name
+        +String description
+        +Number price
+        +String[] availableSizes
+        +String imageUrl
+        +Boolean isActive
+        +Date createdAt
+        +activate() void
+        +deactivate() void
+    }
+
+    class Order {
+        +ObjectId _id
+        +ObjectId studentId
+        +OrderItem[] items
+        +String status
+        +Number totalAmount
+        +ObjectId deliverySlotId
+        +Date createdAt
+        +confirm() void
+        +dispatch() void
+        +markDelivered() void
+    }
+
+    class OrderItem {
+        +ObjectId merchandiseId
+        +String size
+        +Number quantity
+        +Number price
+    }
+
+    class DeliverySlot {
+        +ObjectId _id
+        +ObjectId clubId
+        +Date scheduledAt
+        +String location
+        +String description
+        +ObjectId[] subscribedStudentIds
+        +subscribe(studentId) void
+        +notifySubscribers() void
+    }
+
+    class Notification {
+        +ObjectId _id
+        +ObjectId userId
+        +String type
+        +String message
+        +Boolean isRead
+        +Date createdAt
+        +markRead() void
+    }
+
+    User "1" --> "1" SizeProfile : has
+    User "1" --> "0..*" Order : places
+    User "1" --> "0..*" Notification : receives
+    Club "1" --> "0..*" Merchandise : lists
+    Club "1" --> "0..*" DeliverySlot : schedules
+    Order "1" --> "1..*" OrderItem : contains
+    Order "0..*" --> "0..1" DeliverySlot : assigned to
+    User "1" --> "0..1" Club : manages
+
+@enduml

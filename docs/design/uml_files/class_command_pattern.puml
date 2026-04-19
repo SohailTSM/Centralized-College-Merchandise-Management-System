@@ -1,0 +1,35 @@
+@startuml
+interface ICommand {
+        +execute() Promise<void>
+        +undo() Promise<void>
+    }
+
+    class PlaceOrderCommand {
+        -OrderRepository orderRepo
+        -MerchandiseRepository merchRepo
+        -OrderEventEmitter emitter
+        -Object orderData
+        -Order createdOrder
+        +execute() Promise<void>
+        +undo() Promise<void>
+    }
+
+    class UpdateOrderStatusCommand {
+        -String orderId
+        -String newStatus
+        -String previousStatus
+        +execute() Promise<void>
+        +undo() Promise<void>
+    }
+
+    class CommandInvoker {
+        -ICommand[] history
+        +run(command) Promise<void>
+        +undoLast() Promise<void>
+    }
+
+    ICommand <|.. PlaceOrderCommand : implements
+    ICommand <|.. UpdateOrderStatusCommand : implements
+    CommandInvoker --> ICommand : executes
+
+@enduml

@@ -1,0 +1,29 @@
+@startuml
+title SD6 — Club Admin Updates Order Status (Mark Delivered)
+
+actor ClubAdmin
+participant "React Frontend" as React
+participant OrderController
+participant UpdateOrderStatusCommand
+participant OrderRepository
+participant OrderEventEmitter
+participant NotificationObserver
+participant NotificationRepository
+participant MongoDB
+
+ClubAdmin->React: Click "Mark Delivered" on Order Card
+React->OrderController: PATCH /api/orders/:id/status { status: "delivered" }
+OrderController->UpdateOrderStatusCommand: new UpdateOrderStatusCommand(id, "delivered")
+UpdateOrderStatusCommand->OrderRepository: update(id, {status})
+OrderRepository->MongoDB: updateOne(orders)
+MongoDB-->OrderRepository: Order document
+OrderRepository-->UpdateOrderStatusCommand: Order
+UpdateOrderStatusCommand->OrderEventEmitter: emitOrderDelivered(order)
+OrderEventEmitter->NotificationObserver: handleOrderDelivered(order)
+NotificationObserver->NotificationRepository: create({userId, type:"order_delivered", message})
+NotificationRepository->MongoDB: insertOne(notifications)
+UpdateOrderStatusCommand-->OrderController: success
+OrderController-->React: 200 OK
+React-->ClubAdmin: UI updates order status to delivered
+
+@enduml

@@ -1,0 +1,25 @@
+@startuml
+class EventBus {
+        -Map<String, Function[]> subscribers
+        +publish(event, data) void
+        +subscribe(event, handler) void
+        +unsubscribe(event, handler) void
+    }
+
+    class DeliverySlotPublisher {
+        -EventBus bus
+        +publishSlotCreated(slot) void
+        +publishSlotUpdated(slot) void
+    }
+
+    class NotificationSubscriber {
+        -EventBus bus
+        -NotificationRepository repo
+        +onSlotCreated(slot) void
+        +onSlotUpdated(slot) void
+    }
+
+    EventBus <-- DeliverySlotPublisher : publishes to
+    EventBus --> NotificationSubscriber : notifies
+
+@enduml

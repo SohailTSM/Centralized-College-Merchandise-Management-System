@@ -1,0 +1,36 @@
+@startuml
+class EventEmitter {
+        <<Node.js built-in>>
+        +on(event, listener) void
+        +emit(event, data) void
+        +off(event, listener) void
+    }
+
+    class OrderEventEmitter {
+        +emitOrderConfirmed(order) void
+        +emitOrderDispatched(order) void
+    }
+
+    interface IOrderObserver {
+        +handleOrderConfirmed(order) void
+        +handleOrderDispatched(order) void
+    }
+
+    class NotificationObserver {
+        -NotificationRepository repo
+        +handleOrderConfirmed(order) void
+        +handleOrderDispatched(order) void
+    }
+
+    class DeliverySlotObserver {
+        -DeliverySlotRepository repo
+        +handleOrderPlaced(order) void
+        +handleOrderDelivered(order) void
+    }
+
+    EventEmitter <|-- OrderEventEmitter : extends
+    IOrderObserver <|.. NotificationObserver : implements
+    IOrderObserver <|.. DeliverySlotObserver : implements
+    OrderEventEmitter --> IOrderObserver : notifies
+
+@enduml

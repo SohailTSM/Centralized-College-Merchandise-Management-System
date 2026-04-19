@@ -1,0 +1,55 @@
+@startuml
+
+
+    class UserRepository {
+        -UserModel model
+        +findById(id) User
+        +findByEmail(email) User
+        +findAll(filter) User[]
+        +create(data) User
+        +update(id, data) User
+        +delete(id) void
+    }
+
+    class MerchandiseRepository {
+        -MerchandiseModel model
+        +findById(id) Merchandise
+        +findAll(filter) Merchandise[]
+        +findByClub(clubId) Merchandise[]
+        +create(data) Merchandise
+        +update(id, data) Merchandise
+        +delete(id) void
+    }
+
+    class OrderRepository {
+        -OrderModel model
+        +findById(id) Order
+        +findAll(filter) Order[]
+        +findByStudent(studentId) Order[]
+        +findByClub(clubId) Order[]
+        +create(data) Order
+        +update(id, data) Order
+        +delete(id) void
+    }
+
+    class DeliverySlotRepository {
+        -DeliverySlotModel model
+        +findById(id) DeliverySlot
+        +findAll(filter) DeliverySlot[]
+        +findByClub(clubId) DeliverySlot[]
+        +create(data) DeliverySlot
+        +update(id, data) DeliverySlot
+        +subscribe(id, studentId) void
+    }
+
+    class NotificationRepository {
+        -NotificationModel model
+        +findById(id) Notification
+        +findByUser(userId) Notification[]
+        +create(data) Notification
+        +markRead(id) void
+    }
+
+
+
+@enduml
