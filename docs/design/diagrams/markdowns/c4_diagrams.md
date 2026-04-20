@@ -6,7 +6,7 @@
 
 > Shows how the CCMMS system fits into the world and who interacts with it.
 
-![System Context diagram](./uml_files/png/c4_context.png)
+![System Context diagram](../../uml_files/png/c4_context.png)
 
 ---
 
@@ -14,7 +14,7 @@
 
 > Shows the major containers (applications and data stores) inside CCMMS and how they interact.
 
-![Container diagram](./uml_files/png/c4_container.png)
+![Container diagram](../../uml_files/png/c4_container.png)
 
 ---
 
@@ -22,7 +22,7 @@
 
 > Zooms into the Express REST API container, showing its internal components and their responsibilities.
 
-![Component diagram](./uml_files/png/c4_component.png)
+![Component diagram](../../uml_files/png/c4_component.png)
 
 ---
 

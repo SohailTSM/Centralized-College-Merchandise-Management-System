@@ -1,0 +1,97 @@
+@startuml
+skinparam handwritten false
+skinparam monochrome false
+skinparam defaultFontName Inter
+skinparam linetype ortho
+
+hide circle
+
+skinparam class {
+  BackgroundColor White
+  ArrowColor #6366f1
+  BorderColor #6366f1
+}
+
+entity "User" as user {
+  * _id : ObjectId
+  --
+  * name : String
+  * email : String
+  * passwordHash : String
+  * role : Enum(student, club_admin, central_admin)
+  clubId : ObjectId <<FK>>
+  sizeProfile : Object { tshirt, hoodie, other }
+  rollNumber : String
+  mobile : String
+}
+
+entity "Club" as club {
+  * _id : ObjectId
+  --
+  * name : String
+  description : String
+  * adminId : ObjectId <<FK>>
+  logoUrl : String
+}
+
+entity "Merchandise" as merch {
+  * _id : ObjectId
+  --
+  * clubId : ObjectId <<FK>>
+  * type : Enum(tshirt, hoodie, cap, mug)
+  * name : String
+  description : String
+  * price : Number
+  availableSizes : Array<String>
+  imageUrl : String
+  * isActive : Boolean
+}
+
+entity "Order" as order {
+  * _id : ObjectId
+  --
+  * studentId : ObjectId <<FK>>
+  * totalAmount : Number
+  * status : Enum(processing, delivered)
+  deliverySlotId : ObjectId <<FK>>
+}
+
+entity "OrderItem" as orderItem {
+  * merchandiseId : ObjectId <<FK>>
+  * size : String
+  * quantity : Number
+  * price : Number
+}
+
+entity "DeliverySlot" as deliverySlot {
+  * _id : ObjectId
+  --
+  * clubId : ObjectId <<FK>>
+  * scheduledAt : Date
+  * location : String
+  description : String
+  * merchandiseScope : Enum(all, specific)
+  merchandiseIds : Array<ObjectId> <<FK>>
+}
+
+entity "Notification" as notification {
+  * _id : ObjectId
+  --
+  * userId : ObjectId <<FK>>
+  * type : Enum(order_processing, order_delivered, delivery_update, general)
+  * message : String
+  * isRead : Boolean
+  createdAt : Date
+}
+
+user ||--o{ notification : "receives"
+club ||--o{ merch : "sells"
+user ||--o| club : "manages (adminId)"
+user ||--o{ order : "places"
+order *--|{ orderItem : "contains"
+orderItem }o--|| merch : "references"
+club ||--o{ deliverySlot : "schedules"
+deliverySlot ||--o{ merch : "includes (specific)"
+order }o--o| deliverySlot : "fulfilled by"
+
+@enduml

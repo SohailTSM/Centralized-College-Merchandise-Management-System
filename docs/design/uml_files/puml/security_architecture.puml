@@ -1,0 +1,41 @@
+@startuml
+skinparam handwritten false
+skinparam defaultFontName Inter
+
+actor "Client\n(Student/Admin)" as client
+participant "API Gateway \n& Express App" as app
+participant "Auth Middleware\n(protect)" as protect
+participant "RBAC Middleware\n(authorize)" as rbac
+participant "Controller\n(Business Logic)" as controller
+database "MongoDB" as db
+
+client -> app: 1. HTTP Req w/ Bearer Token
+app -> protect: 2. Invoke protect()
+activate protect
+protect -> protect: 3. Verify JWT Signature & Expiry
+alt Invalid Token
+    protect --> client: 401 Unauthorized
+else Valid Token
+    protect -> db: 4. Find User by ID from Token
+    db --> protect: User Document
+    protect -> app: 5. Attach req.user
+    deactivate protect
+end
+
+app -> rbac: 6. Invoke authorize('required_role')
+activate rbac
+rbac -> rbac: 7. Check if req.user.role == required_role
+alt Role Mismatch
+    rbac --> client: 403 Forbidden
+else Role Match
+    rbac -> controller: 8. Proceed to Route Handler
+    deactivate rbac
+end
+
+activate controller
+controller -> db: 9. Execute DB Query
+db --> controller: Data
+controller --> client: 10. 200 OK (JSON Response)
+deactivate controller
+
+@enduml
