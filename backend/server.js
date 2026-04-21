@@ -14,6 +14,7 @@ const orderRoutes        = require('./src/routes/orderRoutes');
 const deliveryRoutes     = require('./src/routes/deliveryRoutes');
 const notificationRoutes = require('./src/routes/notificationRoutes');
 const adminRoutes        = require('./src/routes/adminRoutes');
+const clubRoutes         = require('./src/routes/clubRoutes');
 
 // Error middleware
 const { notFound, errorHandler } = require('./src/middleware/errorMiddleware');
@@ -57,6 +58,7 @@ app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 app.use('/api/auth',           authRoutes);
 app.use('/api/users',          userRoutes);
 app.use('/api/merchandise',    merchandiseRoutes);
+app.use('/api/clubs',          clubRoutes);
 app.use('/api/orders',         orderRoutes);
 app.use('/api/delivery-slots', deliveryRoutes);
 app.use('/api/notifications',  notificationRoutes);
