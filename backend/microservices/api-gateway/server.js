@@ -2,6 +2,8 @@ require('dotenv').config({ path: '../../.env' });
 const express = require('express');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const cors = require('cors');
+const http = require('http');
+const https = require('https');
 
 const app = express();
 app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173', credentials: true }));
@@ -27,9 +29,22 @@ const routes = {
   '/api/notifications': 'http://localhost:5003/api/notifications',
 };
 
+// Keep-alive agent for persistent connections
+const keepAliveAgent = new http.Agent({
+  keepAlive: true,
+  maxSockets: 100,        // max concurrent sockets per host
+  maxFreeSockets: 20,
+  timeout: 60000,
+  keepAliveMsecs: 1000,
+});
+
+const keepAliveHttpsAgent = new https.Agent({
+  keepAlive: true,
+});
+
 // Apply proxy middlewares
 for (const [path, target] of Object.entries(routes)) {
-  app.use(path, createProxyMiddleware({ target, changeOrigin: true }));
+  app.use(path, createProxyMiddleware({ target, changeOrigin: true , agent: keepAliveAgent}));
 }
 
 // Fallback for unmatched routes
