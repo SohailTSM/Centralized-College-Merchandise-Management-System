@@ -54,7 +54,7 @@ const CatalogPage = () => {
   // Fetch all clubs for filter (separate call to get full list)
   const fetchClubs = async () => {
     try {
-      const { data } = await api.get('/admin/clubs');
+      const { data } = await api.get('/clubs');
       setClubs(data);
     } catch {/* ignore — clubs from catalog items is fallback */}
   };
