@@ -64,6 +64,20 @@ app.use('/api/delivery-slots', deliveryRoutes);
 app.use('/api/notifications',  notificationRoutes);
 app.use('/api/admin',          adminRoutes);
 
+const path = require('path');
+
+// ─── Production Serving ────────────────────────────────────────────────────────
+if (process.env.NODE_ENV === 'production') {
+  // Serve static files from the React frontend/dist folder
+  app.use(express.static(path.join(__dirname, '../frontend/dist')));
+
+  // For any other route (non-API), send back the index.html file
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api')) return next();
+    res.sendFile(path.resolve(__dirname, '../frontend', 'dist', 'index.html'));
+  });
+}
+
 // ─── Error Handling ────────────────────────────────────────────────────────────
 app.use(notFound);
 app.use(errorHandler);
