@@ -3,17 +3,32 @@
  * Only accessible to users with role = 'central_admin'
  * Handles: create/manage clubs, create club manager accounts
  */
-const bcrypt = require('bcryptjs');
-const UserRepository  = require('../repositories/UserRepository');
 const ClubRepository  = require('../repositories/ClubRepository');
+const axios           = require('axios');
 
 // ─── Clubs ────────────────────────────────────────────────────────────────────
 
 // GET /api/admin/clubs
 const getAllClubs = async (req, res, next) => {
   try {
-    const clubs = await ClubRepository.findAll();
-    res.json(clubs);
+    const rawClubs = await ClubRepository.findAll();
+    
+    let managersMap = {};
+    try {
+      const authRes = await axios.get('http://localhost:5001/api/auth/internal/club-managers');
+      const managers = authRes.data;
+      managersMap = managers.reduce((acc, mgr) => {
+        acc[mgr._id] = { _id: mgr._id, name: mgr.name, email: mgr.email };
+        return acc;
+      }, {});
+    } catch(e) {}
+
+    const stitchedClubs = rawClubs.map(club => {
+      // Map back to adminId just like Mongoose populate used to
+      return { ...club, adminId: managersMap[club.adminId] || club.adminId };
+    });
+
+    res.json(stitchedClubs);
   } catch (err) { next(err); }
 };
 
@@ -55,8 +70,8 @@ const deleteClub = async (req, res, next) => {
 // GET /api/admin/club-managers
 const getAllClubManagers = async (req, res, next) => {
   try {
-    const managers = await UserRepository.findAll({ role: 'club_admin' });
-    res.json(managers);
+    const authRes = await axios.get('http://localhost:5001/api/auth/internal/club-managers');
+    res.json(authRes.data);
   } catch (err) { next(err); }
 };
 
@@ -67,20 +82,17 @@ const createClubManager = async (req, res, next) => {
     if (!name || !email || !password || !clubId)
       return res.status(400).json({ message: 'name, email, password, and clubId are required' });
 
-    const existing = await UserRepository.findByEmail(email);
-    if (existing) return res.status(400).json({ message: 'Email already registered' });
-
     const club = await ClubRepository.findById(clubId);
     if (!club) return res.status(404).json({ message: 'Club not found' });
 
-    const passwordHash = await bcrypt.hash(password, 12);
-    const manager = await UserRepository.create({
-      name,
-      email,
-      passwordHash,
-      role: 'club_admin',
-      clubId,
-    });
+    // Let the Auth Service create the user and hash the password
+    let manager;
+    try {
+      const authRes = await axios.post('http://localhost:5001/api/auth/internal/club-managers', { name, email, password, clubId });
+      manager = authRes.data;
+    } catch(err) {
+      return res.status(err.response?.status || 500).json({ message: err.response?.data?.message || 'Error creating manager on Auth Service' });
+    }
 
     // Update club's adminId to this manager
     await ClubRepository.update(clubId, { adminId: manager._id });
@@ -92,7 +104,7 @@ const createClubManager = async (req, res, next) => {
 // DELETE /api/admin/club-managers/:id
 const deleteClubManager = async (req, res, next) => {
   try {
-    await UserRepository.delete(req.params.id);
+    await axios.delete(`http://localhost:5001/api/auth/internal/club-managers/${req.params.id}`);
     res.json({ message: 'Club manager deleted' });
   } catch (err) { next(err); }
 };
@@ -100,8 +112,8 @@ const deleteClubManager = async (req, res, next) => {
 // GET /api/admin/students
 const getAllStudents = async (req, res, next) => {
   try {
-    const students = await UserRepository.findAll({ role: 'student' });
-    res.json(students);
+    const authRes = await axios.get('http://localhost:5001/api/auth/internal/students');
+    res.json(authRes.data);
   } catch (err) { next(err); }
 };
 

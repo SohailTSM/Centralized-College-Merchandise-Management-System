@@ -1,49 +1,99 @@
 const DeliverySlotRepository = require('../repositories/DeliverySlotRepository');
 const OrderRepository        = require('../repositories/OrderRepository');
-const UserRepository         = require('../repositories/UserRepository');
 const eventBus               = require('../patterns/pubsub/EventBus');
-const Merchandise            = require('../models/Merchandise');
-const Order                  = require('../models/Order');
+const axios                  = require('axios');
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const getMerchIdsForClub = async (clubId) => {
-  const merch = await Merchandise.find({ clubId, isActive: true }).select('_id');
-  return merch.map((m) => m._id);
+  try {
+    const res = await axios.get(`http://localhost:5002/api/merchandise/internal/club/${clubId}`);
+    return res.data.map(m => m._id);
+  } catch (err) { return []; }
+};
+
+const composeOrders = async (rawOrders) => {
+  const uniqueStudents = [...new Set(rawOrders.map(o => String(o.studentId)))];
+  const uniqueMerch = [...new Set(rawOrders.flatMap(o => o.items.map(i => String(i.merchandiseId))))];
+
+  const usersMap = {};
+  for (const sId of uniqueStudents) {
+    try {
+      const res = await axios.get(`http://localhost:5001/api/auth/internal/users/${sId}`);
+      usersMap[sId] = res.data;
+    } catch(e) {}
+  }
+
+  const merchMap = {};
+  for (const mId of uniqueMerch) {
+    try {
+      const res = await axios.get(`http://localhost:5002/api/merchandise/internal/item/${mId}`);
+      merchMap[mId] = res.data;
+    } catch(e) {}
+  }
+
+  return rawOrders.map((order) => {
+    const studentData = usersMap[order.studentId] || { _id: order.studentId };
+    const itemsData = order.items.map(item => ({
+      ...(item.toObject ? item.toObject() : item),
+      merchandiseId: merchMap[item.merchandiseId] || { _id: item.merchandiseId }
+    }));
+    return { ...(order.toObject ? order.toObject() : order), studentId: studentData, items: itemsData };
+  });
 };
 
 // ─── Club Admin: get their merchandise that has >= 1 processing order ─────────
-// GET /api/delivery-slots/merch-with-orders
 const getMerchWithOrders = async (req, res, next) => {
   try {
-    const allMerch = await Merchandise.find({ clubId: req.user.clubId, isActive: true });
+    const allMerchRes = await axios.get(`http://localhost:5002/api/merchandise/internal/club/${req.user.clubId}`);
     const results = [];
-    for (const m of allMerch) {
-      const count = await Order.countDocuments({ 'items.merchandiseId': m._id, status: 'processing' });
-      if (count > 0) results.push({ ...m.toObject(), processingCount: count });
+    for (const m of allMerchRes.data) {
+      const count = await OrderRepository.countProcessingByMerchandise(m._id);
+      if (count > 0) results.push({ ...m, processingCount: count });
     }
     res.json(results);
   } catch (err) { next(err); }
 };
 
-// GET /api/delivery-slots  (public/student)
+const composeDeliverySlots = async (rawSlots) => {
+  // Fetch all clubs at once to prevent N+1 queries
+  let clubsMap = {};
+  try {
+    const clubsRes = await axios.get('http://localhost:5002/api/admin/clubs');
+    clubsMap = clubsRes.data.reduce((acc, c) => ({ ...acc, [c._id]: { _id: c._id, name: c.name } }), {});
+  } catch(e) {}
+
+  return Promise.all(rawSlots.map(async (slot) => {
+    let clubData = clubsMap[slot.clubId] || { _id: slot.clubId };
+    
+    let itemsData = await Promise.all((slot.merchandiseIds || []).map(async (mId) => {
+      try {
+        const catRes = await axios.get(`http://localhost:5002/api/merchandise/internal/item/${mId}`);
+        return { _id: mId, name: catRes.data.name, type: catRes.data.type };
+      } catch(e) { return { _id: mId }; }
+    }));
+
+    return { ...slot, clubId: clubData, merchandiseIds: itemsData };
+  }));
+};
+
 const getAll = async (req, res, next) => {
   try {
     const filter = {};
     if (req.query.clubId) filter.clubId = req.query.clubId;
-    const slots = await DeliverySlotRepository.findAll(filter);
+    const rawSlots = await DeliverySlotRepository.findAll(filter);
+    const slots = await composeDeliverySlots(rawSlots);
     res.json(slots);
   } catch (err) { next(err); }
 };
 
-// GET /api/delivery-slots/mine  (club admin)
 const getMySlots = async (req, res, next) => {
   try {
-    const slots = await DeliverySlotRepository.findByClub(req.user.clubId);
+    const rawSlots = await DeliverySlotRepository.findByClub(req.user.clubId);
+    const slots = await composeDeliverySlots(rawSlots);
     res.json(slots);
   } catch (err) { next(err); }
 };
 
-// POST /api/delivery-slots
 const create = async (req, res, next) => {
   try {
     const { scheduledAt, location, description, merchandiseScope, merchandiseIds } = req.body;
@@ -55,13 +105,11 @@ const create = async (req, res, next) => {
       merchandiseScope: merchandiseScope || 'all',
       merchandiseIds:   (merchandiseScope === 'specific' && merchandiseIds) ? merchandiseIds : [],
     });
-    // Pub-Sub: notify all buyers of covered merchandise
     await eventBus.publish('slot:created', slot);
     res.status(201).json(slot);
   } catch (err) { next(err); }
 };
 
-// PUT /api/delivery-slots/:id
 const update = async (req, res, next) => {
   try {
     const slot = await DeliverySlotRepository.findById(req.params.id);
@@ -74,36 +122,26 @@ const update = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-// GET /api/delivery-slots/:id/orders
 const getSlotOrders = async (req, res, next) => {
   try {
     const slot = await DeliverySlotRepository.findById(req.params.id);
     if (!slot) return res.status(404).json({ message: 'Slot not found' });
+    let merchandiseIds = (slot.merchandiseScope === 'specific' && slot.merchandiseIds.length > 0)
+      ? slot.merchandiseIds
+      : await getMerchIdsForClub(slot.clubId);
 
-    let merchandiseIds;
-    if (slot.merchandiseScope === 'specific' && slot.merchandiseIds.length > 0) {
-      merchandiseIds = slot.merchandiseIds;
-    } else {
-      merchandiseIds = await getMerchIdsForClub(slot.clubId);
-    }
-
-    const orders = await Order.find({
-      'items.merchandiseId': { $in: merchandiseIds },
-      status: 'processing',
-    })
-      .populate('studentId', 'name email rollNumber mobile sizeProfile')
-      .populate('items.merchandiseId', 'name type');
-
-    res.json(orders);
+    const rawOrders = await OrderRepository.findProcessingByMerchandiseIds(merchandiseIds);
+    const composedOrders = await composeOrders(rawOrders);
+    res.json(composedOrders);
   } catch (err) { next(err); }
 };
 
-// GET /api/delivery-slots/search-students?q=...
 const searchStudents = async (req, res, next) => {
   try {
     const { q } = req.query;
     if (!q || q.length < 2) return res.json([]);
-    const students = await UserRepository.search(q);
+    const studentsRes = await axios.get(`http://localhost:5001/api/auth/internal/search-students?q=${q}`);
+    const students = studentsRes.data;
     const results = await Promise.all(
       students.map(async (s) => {
         const orders = await OrderRepository.findByStudent(s._id);

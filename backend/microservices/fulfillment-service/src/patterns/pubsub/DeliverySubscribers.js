@@ -5,8 +5,8 @@
  */
 const eventBus = require('./EventBus');
 const NotificationRepository = require('../../repositories/NotificationRepository');
-const Order       = require('../../models/Order');
-const Merchandise = require('../../models/Merchandise');
+const OrderRepository = require('../../repositories/OrderRepository');
+const axios = require('axios');
 
 const registerDeliverySubscribers = () => {
   eventBus.subscribe('slot:created', async (slot) => {
@@ -16,21 +16,19 @@ const registerDeliverySubscribers = () => {
       if (slot.merchandiseScope === 'specific' && slot.merchandiseIds && slot.merchandiseIds.length > 0) {
         merchandiseIds = slot.merchandiseIds;
       } else {
-        // All active merchandise of this club
-        const clubMerch = await Merchandise.find({ clubId: slot.clubId, isActive: true }).select('_id');
-        merchandiseIds = clubMerch.map((m) => m._id);
+        // Fetch all active merchandise of this club via Catalog Service Axios loopback
+        try {
+          const res = await axios.get(`http://localhost:5002/api/merchandise/internal/club/${slot.clubId}`);
+          merchandiseIds = res.data.map(m => m._id);
+        } catch (e) {
+          console.error('DeliverySubscribers: Catalog Service unreachable', e.message);
+        }
       }
 
       if (merchandiseIds.length === 0) return;
 
-      // Find all processing orders for these merchandise items
-      const orders = await Order.find({
-        'items.merchandiseId': { $in: merchandiseIds },
-        status: 'processing',
-      }).select('studentId');
-
-      // Unique student IDs
-      const studentIds = [...new Set(orders.map((o) => String(o.studentId)))];
+      // Find all students holding processing orders for these merchandise items via Repository
+      const studentIds = await OrderRepository.findProcessingStudentsForMerchandise(merchandiseIds);
 
       const scheduledStr = new Date(slot.scheduledAt).toLocaleString('en-IN', {
         day: '2-digit', month: '2-digit', year: 'numeric',
@@ -63,12 +61,15 @@ const registerDeliverySubscribers = () => {
       if (slot.merchandiseScope === 'specific' && slot.merchandiseIds?.length > 0) {
         merchandiseIds = slot.merchandiseIds;
       } else {
-        const clubMerch = await Merchandise.find({ clubId: slot.clubId, isActive: true }).select('_id');
-        merchandiseIds = clubMerch.map((m) => m._id);
+        try {
+          const res = await axios.get(`http://localhost:5002/api/merchandise/internal/club/${slot.clubId}`);
+          merchandiseIds = res.data.map(m => m._id);
+        } catch (e) {}
       }
 
-      const orders = await Order.find({ 'items.merchandiseId': { $in: merchandiseIds }, status: 'processing' }).select('studentId');
-      const studentIds = [...new Set(orders.map((o) => String(o.studentId)))];
+      if (merchandiseIds.length === 0) return;
+
+      const studentIds = await OrderRepository.findProcessingStudentsForMerchandise(merchandiseIds);
 
       await Promise.all(studentIds.map((studentId) =>
         NotificationRepository.create({

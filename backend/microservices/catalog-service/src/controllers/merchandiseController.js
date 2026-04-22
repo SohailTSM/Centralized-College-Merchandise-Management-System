@@ -78,4 +78,12 @@ const getMyClubListings = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-module.exports = { getAll, getOne, create, update, toggleStatus, getMyClubListings };
+// GET /api/merchandise/internal/club/:id
+const getInternalClubListings = async (req, res, next) => {
+  try {
+    const items = await MerchandiseRepository.findByClub(req.params.id, true);
+    res.json(items);
+  } catch (err) { next(err); }
+};
+
+module.exports = { getAll, getOne, create, update, toggleStatus, getMyClubListings, getInternalClubListings };

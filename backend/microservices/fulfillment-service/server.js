@@ -1,15 +1,10 @@
-require('dotenv').config({path: '../../.env'});
+require('dotenv').config();
 const express  = require('express');
 const cors     = require('cors');
 const connectDB = require('./src/config/db');
 
-// Explicitly register all Mongoose Schemas for Microservice Cross-Population
-require('./src/models/User');
-require('./src/models/Club');
-require('./src/models/Merchandise');
-require('./src/models/Order');
-require('./src/models/Notification');
-require('./src/models/DeliverySlot');
+// Database-per-service requires explicitly no cross-population
+
 
 const { notFound, errorHandler } = require('./src/middleware/errorMiddleware');
 

@@ -1,0 +1,61 @@
+
+======================================================
+   STAGE 1: READ BENCHMARK (Catalog via Gateway)      
+======================================================
+
+--- Concurrency: 10 | Duration: 10s ---
+Throughput: 246.20 req/sec
+Latency:    40.12 ms (Mean) | 109.00 ms (p99)
+Total Req:  2462 | Errors: 0
+
+--- Concurrency: 25 | Duration: 10s ---
+Throughput: 346.19 req/sec
+Latency:    71.49 ms (Mean) | 140.00 ms (p99)
+Total Req:  3808 | Errors: 0
+
+--- Concurrency: 50 | Duration: 10s ---
+Throughput: 358.50 req/sec
+Latency:    139.10 ms (Mean) | 368.00 ms (p99)
+Total Req:  3585 | Errors: 0
+
+--- Concurrency: 75 | Duration: 10s ---
+Throughput: 370.00 req/sec
+Latency:    202.58 ms (Mean) | 420.00 ms (p99)
+Total Req:  3700 | Errors: 0
+
+--- Concurrency: 100 | Duration: 10s ---
+Throughput: 449.70 req/sec
+Latency:    220.41 ms (Mean) | 824.00 ms (p99)
+Total Req:  4497 | Errors: 0
+
+======================================================
+   STAGE 2: WRITE BENCHMARK (Orders via Gateway)      
+======================================================
+Targeting Merchandise ID: 69e8c2319d861673890ccc6a | Price: 1000
+
+--- Concurrency: 10 | Duration: 10s ---
+Throughput: 417.80 req/sec
+Latency:    23.43 ms (Mean) | 62.00 ms (p99)
+Total Req:  4178 | Errors: 0
+
+--- Concurrency: 25 | Duration: 10s ---
+Throughput: 467.00 req/sec
+Latency:    53.06 ms (Mean) | 105.00 ms (p99)
+Total Req:  4670 | Errors: 0
+
+--- Concurrency: 50 | Duration: 10s ---
+Throughput: 266.50 req/sec
+Latency:    154.94 ms (Mean) | 2712.00 ms (p99)
+Total Req:  2665 | Errors: 0
+
+--- Concurrency: 75 | Duration: 10s ---
+Throughput: 0.00 req/sec
+Latency:    0.00 ms (Mean) | 0.00 ms (p99)
+Total Req:  0 | Errors: 0
+
+--- Concurrency: 100 | Duration: 10s ---
+Throughput: 308.00 req/sec
+Latency:    509.14 ms (Mean) | 8906.00 ms (p99)
+Total Req:  2772 | Errors: 1
+
+[✓] Autocannon Benchmarking Suite Complete. Matrix finalized.

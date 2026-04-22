@@ -2,22 +2,15 @@ const DeliverySlot = require('../models/DeliverySlot');
 
 class DeliverySlotRepository {
   async findById(id) {
-    return DeliverySlot.findById(id)
-      .populate('clubId', 'name')
-      .populate('merchandiseIds', 'name type');
+    return DeliverySlot.findById(id).lean();
   }
 
   async findAll(filter = {}) {
-    return DeliverySlot.find(filter)
-      .populate('clubId', 'name')
-      .populate('merchandiseIds', 'name type')
-      .sort({ scheduledAt: -1 }); // newest first
+    return DeliverySlot.find(filter).sort({ scheduledAt: -1 }).lean();
   }
 
   async findByClub(clubId) {
-    return DeliverySlot.find({ clubId })
-      .populate('merchandiseIds', 'name type')
-      .sort({ scheduledAt: -1 }); // newest first
+    return DeliverySlot.find({ clubId }).sort({ scheduledAt: -1 }).lean();
   }
 
   async create(data) {

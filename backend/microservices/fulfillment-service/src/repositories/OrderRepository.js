@@ -2,27 +2,28 @@ const Order = require('../models/Order');
 
 class OrderRepository {
   async findById(id) {
-    return Order.findById(id).populate('studentId', 'name email').populate('items.merchandiseId', 'name type imageUrl');
+    return Order.findById(id).lean();
   }
 
   async findAll(filter = {}) {
-    return Order.find(filter).populate('studentId', 'name email').sort({ createdAt: -1 });
+    return Order.find(filter).sort({ createdAt: -1 }).lean();
   }
 
   async findByStudent(studentId) {
-    return Order.find({ studentId }).populate('items.merchandiseId', 'name type imageUrl price').sort({ createdAt: -1 });
+    return Order.find({ studentId }).sort({ createdAt: -1 }).lean();
   }
 
-  async findByClub(clubId) {
-    const MerchandiseRepository = require('./MerchandiseRepository');
-    const clubItems = await MerchandiseRepository.findByClub(clubId, true);
-    const clubItemIds = clubItems.map((m) => m._id);
-    return Order.find({ 'items.merchandiseId': { $in: clubItemIds } })
-      .populate('studentId', 'name email rollNumber mobile sizeProfile')
-      .populate('items.merchandiseId', 'name type')
-      .sort({ createdAt: -1 });
+  async countProcessingByMerchandise(merchandiseId) {
+    return Order.countDocuments({ 'items.merchandiseId': merchandiseId, status: 'processing' });
   }
 
+  async findByMerchandiseIds(merchandiseIds) {
+    return Order.find({ 'items.merchandiseId': { $in: merchandiseIds } }).sort({ createdAt: -1 }).lean();
+  }
+
+  async findProcessingByMerchandiseIds(merchandiseIds) {
+    return Order.find({ 'items.merchandiseId': { $in: merchandiseIds }, status: 'processing' }).sort({ createdAt: -1 }).lean();
+  }
 
   async create(data) {
     const order = new Order(data);
