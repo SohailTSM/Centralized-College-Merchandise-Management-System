@@ -36,7 +36,7 @@ const ProfilePage = () => {
       <ToastContainer />
       <div className="page-header">
         <h1 className="page-title">👤 My Profile</h1>
-        <p className="page-subtitle">Update your name and size preferences</p>
+        <p className="page-subtitle">Update your personal information</p>
       </div>
       <form className="card flex-col" onSubmit={onSubmit}>
         <div className="form-group">
@@ -48,22 +48,25 @@ const ProfilePage = () => {
           <label className="form-label">Email</label>
           <input className="form-input" value={user?.email || ''} disabled style={{ opacity: 0.5 }} />
         </div>
-        <div>
-          <p className="form-label" style={{ marginBottom: '0.75rem' }}>Size Preferences</p>
-          {['tshirt', 'hoodie', 'other'].map((key) => (
-            <div key={key} style={{ marginBottom: '0.75rem' }}>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginBottom: '0.35rem', textTransform: 'capitalize' }}>{key}</p>
-              <div className="size-buttons">
-                {SIZES.map((s) => (
-                  <button key={s} type="button"
-                    className={`size-btn${form.sizeProfile[key] === s ? ' selected' : ''}`}
-                    onClick={() => onSizeChange(key, s)}>{s}
-                  </button>
-                ))}
+
+        {user?.role === 'student' && (
+          <div>
+            <p className="form-label" style={{ marginBottom: '0.75rem' }}>Size Preferences</p>
+            {['tshirt', 'hoodie', 'other'].map((key) => (
+              <div key={key} style={{ marginBottom: '0.75rem' }}>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginBottom: '0.35rem', textTransform: 'capitalize' }}>{key}</p>
+                <div className="size-buttons">
+                  {SIZES.map((s) => (
+                    <button key={s} type="button"
+                      className={`size-btn${form.sizeProfile[key] === s ? ' selected' : ''}`}
+                      onClick={() => onSizeChange(key, s)}>{s}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
         <button id="profile-save-btn" className="btn btn-primary" type="submit" disabled={loading}>
           {loading ? 'Saving…' : 'Save Profile'}
         </button>

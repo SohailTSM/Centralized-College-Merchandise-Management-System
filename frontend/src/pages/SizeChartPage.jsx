@@ -104,7 +104,7 @@ const SizeChartPage = () => {
 
       <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', textAlign: 'center' }}>
         All measurements are approximate. If you're between sizes, we recommend sizing up.{' '}
-        <Link to="/register" style={{ color: 'var(--primary-light)' }}>Save your size preference →</Link>
+        <Link to="/profile" style={{ color: 'var(--primary-light)' }}>Save your size preference →</Link>
       </p>
     </div>
   );

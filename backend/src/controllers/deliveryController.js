@@ -1,13 +1,12 @@
+const MerchandiseRepository = require('../repositories/MerchandiseRepository');
+const OrderRepository       = require('../repositories/OrderRepository');
 const DeliverySlotRepository = require('../repositories/DeliverySlotRepository');
-const OrderRepository        = require('../repositories/OrderRepository');
 const UserRepository         = require('../repositories/UserRepository');
 const eventBus               = require('../patterns/pubsub/EventBus');
-const Merchandise            = require('../models/Merchandise');
-const Order                  = require('../models/Order');
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const getMerchIdsForClub = async (clubId) => {
-  const merch = await Merchandise.find({ clubId, isActive: true }).select('_id');
+  const merch = await MerchandiseRepository.findActiveByClub(clubId);
   return merch.map((m) => m._id);
 };
 
@@ -15,10 +14,10 @@ const getMerchIdsForClub = async (clubId) => {
 // GET /api/delivery-slots/merch-with-orders
 const getMerchWithOrders = async (req, res, next) => {
   try {
-    const allMerch = await Merchandise.find({ clubId: req.user.clubId, isActive: true });
+    const allMerch = await MerchandiseRepository.findByClub(req.user.clubId, false);
     const results = [];
     for (const m of allMerch) {
-      const count = await Order.countDocuments({ 'items.merchandiseId': m._id, status: 'processing' });
+      const count = await OrderRepository.countProcessingByMerchandise(m._id);
       if (count > 0) results.push({ ...m.toObject(), processingCount: count });
     }
     res.json(results);
@@ -87,13 +86,7 @@ const getSlotOrders = async (req, res, next) => {
       merchandiseIds = await getMerchIdsForClub(slot.clubId);
     }
 
-    const orders = await Order.find({
-      'items.merchandiseId': { $in: merchandiseIds },
-      status: 'processing',
-    })
-      .populate('studentId', 'name email rollNumber mobile sizeProfile')
-      .populate('items.merchandiseId', 'name type');
-
+    const orders = await OrderRepository.findProcessingWithDetails(merchandiseIds);
     res.json(orders);
   } catch (err) { next(err); }
 };

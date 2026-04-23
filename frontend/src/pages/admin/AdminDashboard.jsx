@@ -17,7 +17,7 @@ const AdminDashboard = () => {
   }, []);
 
   const totalRevenue = orders.reduce((s, o) => s + o.totalAmount, 0);
-  const pending      = orders.filter((o) => o.status === 'pending').length;
+  const pending      = orders.filter((o) => o.status === 'processing').length;
 
   return (
     <div className="page">

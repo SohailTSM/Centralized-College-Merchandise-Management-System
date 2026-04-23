@@ -108,7 +108,7 @@ body {
 .nav-brand    { font-size: 1.25rem; font-weight: 800; color: var(--primary-light); text-decoration: none; letter-spacing: -0.02em; }
 .nav-links    { display: flex; align-items: center; gap: 0.25rem; }
 .nav-link     { padding: 0.5rem 0.875rem; border-radius: var(--radius-sm); color: var(--text-muted); text-decoration: none; font-size: 0.875rem; font-weight: 500; transition: var(--transition); }
-.nav-link:hover,.nav-link.active { color: var(--text); background: rgba(255,255,255,0.06); }
+.nav-link:hover,.nav-link.active { color: var(--text); background: rgba(255,255,255,0.06); transform: translateY(-2px); }
 .nav-avatar   { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--accent)); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; cursor: pointer; }
 .nav-badge    {
   position: relative;

@@ -79,7 +79,9 @@ const seedDatabase = async () => {
         email: demoUserEmail,
         passwordHash: await bcrypt.hash(demoPass, 12),
         role: 'student',
-        sizeProfile: { tshirt: 'L', hoodie: 'XL', other: 'Standard' }
+        sizeProfile: { tshirt: 'L', hoodie: 'XL', other: 'Standard' },
+        rollNumber: '2025000001',
+        mobile: '9988776655', 
       });
       console.log(`✅ Demo Student seeded: ${demoUserEmail}`);
     }

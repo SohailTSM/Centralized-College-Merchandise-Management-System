@@ -37,6 +37,26 @@ class OrderRepository {
     return [...new Set(orders.map((o) => String(o.studentId)))];
   }
 
+  async countProcessingByMerchandise(merchandiseId) {
+    return Order.countDocuments({ 'items.merchandiseId': merchandiseId, status: 'processing' });
+  }
+
+  async findProcessingByMerchandiseIn(merchandiseIds) {
+    return Order.find({
+      'items.merchandiseId': { $in: merchandiseIds },
+      status: 'processing',
+    }).select('studentId');
+  }
+
+  async findProcessingWithDetails(merchandiseIds) {
+    return Order.find({
+      'items.merchandiseId': { $in: merchandiseIds },
+      status: 'processing',
+    })
+      .populate('studentId', 'name email rollNumber mobile sizeProfile')
+      .populate('items.merchandiseId', 'name type');
+  }
+
   async update(id, data) {
     return Order.findByIdAndUpdate(id, data, { new: true, runValidators: true });
   }

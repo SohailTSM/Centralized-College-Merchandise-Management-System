@@ -72,9 +72,10 @@ const RegisterPage = () => {
               </div>
             ))}
             <p style={{ fontSize: '0.7rem', color: 'var(--text-dim)', marginTop: '0.5rem' }}>
-              📏 Not sure of your size? Check the <Link to="/size-chart" style={{ color: 'var(--primary-light)' }}>Size Chart</Link>
-            </p>
+              Can also be updated later from the profile page
+            </p>  
           </div>
+
 
           <button id="reg-btn" className="btn btn-primary btn-lg btn-full" type="submit" disabled={loading}>
             {loading ? 'Creating account…' : 'Create Account'}

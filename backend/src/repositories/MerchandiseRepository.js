@@ -20,6 +20,10 @@ class MerchandiseRepository {
     return Merchandise.find(filter).populate('clubId', 'name logoUrl').sort({ createdAt: -1 });
   }
 
+  async findActiveByClub(clubId) {
+    return Merchandise.find({ clubId, isActive: true }).select('_id name type imageUrl');
+  }
+
 
   async create(data) {
     const item = new Merchandise(data);

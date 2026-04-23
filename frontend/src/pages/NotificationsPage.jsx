@@ -26,6 +26,7 @@ const NotificationsPage = () => {
     try {
       await api.patch(`/notifications/${id}/read`);
       setNotifications((prev) => prev.map((n) => n._id === id ? { ...n, isRead: true } : n));
+      window.dispatchEvent(new Event('notificationsUpdated'));
     } catch { /* silent */ }
   };
 
@@ -33,6 +34,7 @@ const NotificationsPage = () => {
     try {
       await api.patch('/notifications/read-all');
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+      window.dispatchEvent(new Event('notificationsUpdated'));
       success('All notifications marked as read');
     } catch { error('Failed'); }
   };

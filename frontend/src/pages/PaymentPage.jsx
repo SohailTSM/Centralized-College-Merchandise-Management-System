@@ -24,6 +24,7 @@ const PaymentPage = () => {
       // Place order
       const { data } = await api.post('/orders', { items, totalAmount });
       setOrder(data);
+      window.dispatchEvent(new Event('notificationsUpdated'));
       setStep('done');
     } catch (err) {
       setError(err.response?.data?.message || 'Payment failed, please try again');
