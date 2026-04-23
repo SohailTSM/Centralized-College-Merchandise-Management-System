@@ -46,6 +46,33 @@ const LoginPage = () => {
         <p style={{ textAlign: 'center', marginTop: '1.5rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
           No account? <Link to="/register" style={{ color: 'var(--primary-light)' }}>Create one</Link>
         </p>
+
+        <div className="demo-credentials">
+          <p className="demo-title">Test Drive (Guest Access)</p>
+          <div className="demo-grid">
+            <div className="demo-item">
+              <span className="demo-label">Student</span>
+              <button 
+                type="button"
+                className="demo-btn" 
+                onClick={() => setForm({ email: 'demo.user@ccmms.com', password: 'Demo@123' })}
+              >
+                Use Demo User
+              </button>
+            </div>
+            <div className="demo-item">
+              <span className="demo-label">Club Admin</span>
+              <button 
+                type="button"
+                className="demo-btn" 
+                onClick={() => setForm({ email: 'demo.club@ccmms.com', password: 'Demo@123' })}
+              >
+                Use Demo Admin
+              </button>
+            </div>
+          </div>
+          <p className="demo-note">Password: <code style={{ color: 'var(--text-primary)' }}>Demo@123</code></p>
+        </div>
       </div>
     </div>
   );

@@ -26,24 +26,70 @@ const { registerDeliverySubscribers }  = require('./src/patterns/pubsub/Delivery
 // ─── Bootstrap ────────────────────────────────────────────────────────────────
 const app = express();
 
-// Seed Central Admin on startup
-const seedCentralAdmin = async () => {
+// Seed Database on startup
+const seedDatabase = async () => {
   try {
     const User = require('./src/models/User');
+    const Club = require('./src/models/Club');
+
+    // 1. Central Admin
     const adminEmail = process.env.ADMIN_EMAIL    || 'admin@ccmms.college';
     const adminPass  = process.env.ADMIN_PASSWORD || 'Admin@1234';
-    const existing   = await User.findOne({ email: adminEmail });
-    if (!existing) {
-      const passwordHash = await bcrypt.hash(adminPass, 12);
-      await User.create({ name: 'Central Admin', email: adminEmail, passwordHash, role: 'central_admin' });
-      console.log(`✅ Central Admin seeded — Email: ${adminEmail} | Password: ${adminPass}`);
+    if (!(await User.findOne({ email: adminEmail }))) {
+      await User.create({
+        name: 'Central Admin',
+        email: adminEmail,
+        passwordHash: await bcrypt.hash(adminPass, 12),
+        role: 'central_admin'
+      });
+      console.log(`✅ Central Admin seeded: ${adminEmail}`);
     }
+
+    // 2. Demo Club Admin
+    const demoClubEmail = 'demo.club@ccmms.com';
+    const demoPass      = 'Demo@123';
+    let demoClubAdmin = await User.findOne({ email: demoClubEmail });
+    if (!demoClubAdmin) {
+      demoClubAdmin = await User.create({
+        name: 'Demo Club Admin',
+        email: demoClubEmail,
+        passwordHash: await bcrypt.hash(demoPass, 12),
+        role: 'club_admin'
+      });
+      console.log(`✅ Demo Club Admin seeded: ${demoClubEmail}`);
+    }
+
+    // 3. Demo Club (Associate with Demo Club Admin)
+    let demoClub = await Club.findOne({ name: 'Demo Club' });
+    if (!demoClub) {
+      demoClub = await Club.create({
+        name: 'Demo Club',
+        description: 'A shared club for demonstration purposes.',
+        adminId: demoClubAdmin._id
+      });
+      await User.findByIdAndUpdate(demoClubAdmin._id, { clubId: demoClub._id });
+      console.log(`✅ Demo Club created and linked to Admin`);
+    }
+
+    // 4. Demo Student User
+    const demoUserEmail = 'demo.user@ccmms.com';
+    if (!(await User.findOne({ email: demoUserEmail }))) {
+      await User.create({
+        name: 'Demo User',
+        email: demoUserEmail,
+        passwordHash: await bcrypt.hash(demoPass, 12),
+        role: 'student',
+        sizeProfile: { tshirt: 'L', hoodie: 'XL', other: 'Standard' }
+      });
+      console.log(`✅ Demo Student seeded: ${demoUserEmail}`);
+    }
+
   } catch (err) {
-    console.error('Admin seed error:', err.message);
+    console.error('Database seed error:', err.message);
   }
 };
 
-connectDB().then(seedCentralAdmin);
+connectDB().then(seedDatabase);
 
 // Register observers/subscribers (no socket — DB notifications only)
 registerNotificationObserver();

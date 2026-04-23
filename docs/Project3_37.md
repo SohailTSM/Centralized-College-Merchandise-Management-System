@@ -45,6 +45,8 @@ The Centralized College Merchandise Management System (CCMMS) is a MERN stack we
 
 ## GitHub Repository: [Centralized-College-Merchandise-Management-System](https://github.com/SohailTSM/Centralized-College-Merchandise-Management-System)
 
+## Live Demo: [https://ccmms.tsmtech.in/](https://ccmms.tsmtech.in/)
+
 ---
 
 ## 1. System Requirements and Architectural Significance
